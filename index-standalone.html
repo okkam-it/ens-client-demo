@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta charset='utf-8' />
+<meta http-equiv="X-UA-Compatible" content="chrome=1" />
+
+<link rel="stylesheet" type="text/css" href="css/stylesheet.css" media="screen" />
+<script type="text/javascript" src="js/jquery-1.10.2.js" />
+<script type="text/javascript">
+	$(document).ready(function() {
+		$("p").text("Il DOM è stato caricato è può essere manipolato!");
+		alert("Ciao");
+		console.log("document loaded");
+	});
+	$(window).load(function() {
+		console.log("window loaded");
+	});
+</script>
+<script type="text/javascript">
+	var search_example =  {
+			queries: [
+			            {
+			              uuid: "0",
+			              query: {
+			            	  attribute: {
+			            		  name: "location_name",
+			            		  value: "Parigi"
+			            	  }
+			            },
+			              metadata: {
+			                matchingModule: "FM",
+			                entityType: "LOCATION"
+			              }
+			            }
+			          ],
+			verbosity: "COMPACT"
+	};
+	var alt_example =  {
+			ids: [
+			      "ens:eid-aaa8b996-9435-4191-bc62-9c8aee0f23c6",
+			      "ens:eid-77050898-1f11-4579-8e48-ba1f6e580dea"
+			      ]
+	};
+	var entity_example =  {
+			ids: [
+			      "ens:eid-aaa8b996-9435-4191-bc62-9c8aee0f23c6",
+			      "ens:eid-77050898-1f11-4579-8e48-ba1f6e580dea"
+			      ],
+			verbosity: "COMPACT"
+	};
+	
+	function loadXMLDoc() {
+		clearBoard();
+		var type = document.getElementById("serviceType").value;
+		var verbosity = document.getElementById("verbosityCombo").value;
+		if (type == "search") {
+			search_example.verbosity = verbosity;
+		} else if (type == "entity") {
+			entity_example.verbosity = verbosity;
+		}
+		document.getElementById("serviceUrl").innerHTML = getUrlByType(type);
+		if (type == "search") {
+			document.getElementById("scriptArea").value = JSON.stringify(search_example, undefined, 2);
+			document.getElementById("verbosityCombo").disabled = false;
+		} else if (type == "alt") {
+			document.getElementById("scriptArea").value = JSON.stringify(alt_example, undefined, 2);
+			document.getElementById("verbosityCombo").disabled = true;
+		} else if (type == "entity") {
+			document.getElementById("scriptArea").value = JSON.stringify(entity_example, undefined, 2);
+			document.getElementById("verbosityCombo").disabled = false;
+		}
+	}
+
+	function sendRequest() {
+		var start = new Date();
+		var jsonSample = document.getElementById("scriptArea").value;
+		if (jsonSample == "") {
+			$('#responsePanel').addClass('hidden');
+			$('#errorPanel').removeClass('hidden');
+			$('#errorArea').html("Please insert json script");
+			return;
+		}
+		var limit = document.getElementById("limitCombo").value;
+		var type = document.getElementById("serviceType").value;
+		//alert("URL invoked: " + getUrlByType(type));
+		$.ajax({
+			url : getUrlByType(type),
+			type : 'POST',
+			data : {q : jsonSample, l: limit},
+			dataType: "json",
+			success : function(data) {
+				var obj = JSON.stringify(data, null, 4);
+				$('#errorPanel').addClass('hidden');
+				$('#responsePanel').removeClass('hidden');
+				$('#responseArea').html(obj);
+				var end = new Date();
+				var diff = (end.getTime() - start.getTime()) / 1000;
+				$('#timeExecute').html(diff);
+			},
+			error : function(xhr, ajaxOptions, thrownError) {
+				$('#responsePanel').addClass('hidden');
+				$('#errorPanel').removeClass('hidden');
+				$('#errorArea').html(thrownError);
+				alert(xhr.status);
+				alert(thrownError);
+			}
+		});
+	}
+
+	function getUrlByType(type) {
+		if (type == "search") {
+			service = "/okkam-core/search";
+		} else if (type == "alt") {
+			service = "/okkam-core/alt";
+		} else if (type == "entity") {
+			service = "/okkam-core/entity";
+		}
+		return "http://api.okkam.org" + service;
+	}
+
+	function clearBoard() {
+		$('#responsePanel').removeClass('hidden');
+		$('#errorPanel').addClass('hidden');
+		document.getElementById('scriptArea').value = '';
+	}
+</script>
+
+<title>ENS Client Web standalone demo</title>
+</head>
+<body>
+	<div style="padding:10px 0 0 10px">
+		<img src="img/okkam.png" style="vertical-align:middle"/>
+		<h1>ENS Client Web standalone demo</h1>
+	</div>
+	<form id="ensClientForm">
+		<div class="left">
+		<table>
+			<tr>
+				<td width="30">Service:</td>
+				<td><select id="serviceType" class="combobox" onchange="loadXMLDoc()">
+						<option value="default">-</option>
+						<option value="search">SEARCH</option>
+						<option value="alt">ALT</option>
+						<option value="entity">ENTITY</option>
+				</select></td>
+			</tr>	
+			<tr>
+				<td>Limit:</td>
+				<td><select id="limitCombo" class="combobox">
+						<option value="150">150</option>
+						<option value="1">1</option>
+						<option value="2">2</option>
+						<option value="3">3</option>
+				</select></td>
+			</tr>	
+			<tr>
+				<td>Verbosity:</td>
+				<td><select id="verbosityCombo" class="combobox" onchange="loadXMLDoc()">
+						<option value="COMPACT">COMPACT</option>
+						<option value="MINIMAL">MINIMAL</option>
+						<option value="FULL">FULL</option>
+				</select></td>
+			</tr>
+			<tr>
+				<td>Url:</td>
+				<td><label id="serviceUrl">-</label></td>
+			</tr>
+			<tr>
+				<td style="vertical-align:top">Request:</td>
+				<td><textarea id="scriptArea" cols="50" rows="30"></textarea></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td>
+					<div>
+						<button type="button" onclick="sendRequest();">Execute</button>
+<!-- 						<button type="button" onclick="loadXMLDoc();">Load example</button> -->
+						<button type="button" onclick="clearBoard();">Clear</button>
+					</div>
+				</td>
+			</tr>
+		</table>
+		</div>
+		<div class="right" >
+			<div id="errorPanel" class="hidden">
+				<h1 style="color: red;">Error:</h1>
+				<pre style="color: red;" id="errorArea">#{clientBean.error}</pre>
+			</div>
+			<div id="responsePanel" >
+				Response - time elapsed: <label id="timeExecute">0</label> seconds
+				<pre id="responseArea" style="background:white" ></pre>
+			</div>
+		</div>
+	</form>
+</body>
+</html>
