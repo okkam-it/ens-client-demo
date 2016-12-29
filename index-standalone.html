@@ -19,24 +19,41 @@
 	});
 </script>
 <script type="text/javascript">
-	var search_example =  {
-			queries: [
-			            {
-			              uuid: "0",
-			              query: {
-			            	  attribute: {
-			            		  name: "location_name",
-			            		  value: "Parigi"
-			            	  }
-			            },
-			              metadata: {
-			                matchingModule: "FM",
-			                entityType: "LOCATION"
-			              }
-			            }
-			          ],
-			verbosity: "COMPACT"
+	var search_example = {
+		query:{
+			query:{
+				atom:{'@class':"org.okkam.ens.json.common.AndQueryAtom",
+					attributes:[
+						{name:"nome_persona",value:"FLAVIO"},
+						{name:"cognome_persona",value:"POMPERMAIER"}
+					],
+					clause:"AND"
+				}
+			},
+			metadata:{matchingModule:"FM",entityType:"PERSON"}},
+		ignoreSemantic:true,
 	};
+	var search_example_obama = {
+		query:{
+			query:{
+				atom:{'@class':"org.okkam.ens.json.common.AndQueryAtom",
+					attributes:[
+						{name:"first_name",value:"BARACK"},
+						{name:"last_name",value:"OBAMA"}
+					],
+					clause:"AND"
+				}
+			},
+			metadata:{matchingModule:"FM",entityType:"PERSON"}},
+		ignoreSemantic:true,
+	};
+	var search_example_paris =  {
+		query: {query: 	{attribute: {name: "location_name",value: "Parigi"} },
+				metadata: {matchingModule: "FM",entityType: "LOCATION"}
+			   },
+		ignoreSemantic: "true",
+		verbosity: "COMPACT"
+		};
 	var alt_example =  {
 			ids: [
 			      "ens:eid-aaa8b996-9435-4191-bc62-9c8aee0f23c6",
@@ -110,14 +127,8 @@
 	}
 
 	function getUrlByType(type) {
-		if (type == "search") {
-			service = "/okkam-core/search";
-		} else if (type == "alt") {
-			service = "/okkam-core/alt";
-		} else if (type == "entity") {
-			service = "/okkam-core/entity";
-		}
-		return "http://api.okkam.org" + service;
+		//return "http://api.okkam.org/okkam-core/" + type;
+		return "http://172.24.190.25/ens/" + type;
 	}
 
 	function clearBoard() {
@@ -158,8 +169,8 @@
 			<tr>
 				<td>Verbosity:</td>
 				<td><select id="verbosityCombo" class="combobox" onchange="loadXMLDoc()">
-						<option value="COMPACT">COMPACT</option>
 						<option value="MINIMAL">MINIMAL</option>
+						<option value="COMPACT">COMPACT</option>
 						<option value="FULL">FULL</option>
 				</select></td>
 			</tr>
@@ -169,7 +180,7 @@
 			</tr>
 			<tr>
 				<td style="vertical-align:top">Request:</td>
-				<td><textarea id="scriptArea" cols="50" rows="30"></textarea></td>
+				<td><textarea id="scriptArea" cols="60" rows="30"></textarea></td>
 			</tr>
 			<tr>
 				<td></td>
